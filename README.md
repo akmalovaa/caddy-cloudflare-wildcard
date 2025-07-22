@@ -10,6 +10,9 @@ Therefore, the `Dockerfile` rebuilds the Caddy image with this plugin included.
 - ✅ Automatic wildcard SSL certificates generation and renewal via Cloudflare DNS
 - ✅ Simple configuration through Docker Compose
 - ✅ Ready-to-use proxy examples
+- ✅ HTTP/3 support (QUIC)
+- ✅ Automatic log rotation
+- ✅ Built-in security headers
 
 ## Requirements
 
@@ -77,7 +80,7 @@ docker compose ps
 docker compose logs caddy
 ```
 
-example successful log output:
+Example successful log output:
 ```log
 caddy-1  | {"level":"info","logger":"tls.obtain","msg":"lock acquired","identifier":"*.example.com"}
 caddy-1  | {"level":"info","logger":"tls.obtain","msg":"obtaining certificate","identifier":"*.example.com"}
@@ -96,34 +99,116 @@ caddy-1  | {"level":"info","msg":"authorization finalized","identifier":"*.examp
 ├── Caddyfile          # Caddy configuration
 ├── caddy.env          # Environment variables
 ├── compose.yaml       # Docker Compose configuration
-└── README.md          # This file
+├── README.md          # This file
+├── caddy_data/        # Caddy data (certificates, etc.) - created automatically
+└── caddy_config/      # Caddy config cache - created automatically
 ```
+
+## Configuration
+
+### Adding new services
+
+1. **Add service to Docker Compose** (`compose.yaml`):
+```yaml
+services:
+  # ...existing services...
+  
+  myapp:
+    image: nginx:alpine
+    restart: on-failure
+    # expose: [80]  # internal port only
+```
+
+2. **Add route to Caddyfile**:
+```caddyfile
+@myapp host myapp.{env.MAIN_DOMAIN}
+handle @myapp {
+    reverse_proxy myapp:80
+    # Optional: add custom headers
+    header {
+        X-Frame-Options DENY
+        X-Content-Type-Options nosniff
+    }
+}
+```
+
+### Logging
+
+Caddy logs are configured with automatic rotation:
+- Location: `/var/log/caddy/site.log` (inside container)
+- Max size: 10MB per file
+- Keep: 3 rotated files
+- Retention: 7 days
+
+View logs:
+```bash
+# Follow live logs
+docker compose logs -f caddy
+
+# Access log files inside container
+docker compose exec caddy tail -f /var/log/caddy/site.log
+```
+
+### Ports explained
+
+- `80` - HTTP (redirects to HTTPS)
+- `443/tcp` - HTTPS 
+- `443/udp` - HTTP/3 (QUIC protocol)
 
 ## Troubleshooting
 
-### openssl check wildcard certificate
+### Check wildcard certificate with OpenSSL
 
 ```bash
 cd caddy_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/wildcard_.example.com/
 ls -la
-openssl x509 -in wildcard_.example.com.crt --text -noout
+openssl x509 -in wildcard_.example.com.crt -text -noout
 ```
-
 
 ### Certificate generation issues
 
-1. **Check Cloudflare API token:**
+1. **Verify Cloudflare API token:**
 ```bash
 curl -X GET "https://api.cloudflare.com/client/v4/user/tokens/verify" \
   -H "Authorization: Bearer YOUR_API_TOKEN"
 ```
 
-2. **Check Caddy logs:**
+2. **Check Caddy logs for errors:**
 ```bash
 docker compose logs caddy | grep -i error
 ```
 
-3. **Make sure domain is managed through Cloudflare**
+3. **Ensure domain is managed through Cloudflare**
+
+4. **Check DNS propagation:**
+```bash
+dig @1.1.1.1 _acme-challenge.example.com TXT
+```
+
+### Connection issues
+
+1. **Verify ports are accessible:**
+```bash
+# Check if ports are listening
+ss -tlnp | grep -E ':(80|443)\s'
+
+# Test from external machine
+curl -I https://test.example.com
+```
+
+2. **Check firewall settings:**
+```bash
+# Allow ports in firewall (example for ufw)
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw allow 443/udp
+```
+
+### Common errors
+
+- **"no such host"** - Check DNS records point to your server
+- **"connection refused"** - Check if containers are running and ports are open
+- **"certificate error"** - Wait for certificate generation or check API token permissions
 
 
 ## Security
@@ -147,7 +232,25 @@ docker compose exec caddy caddy list-certificates
 
 # Force certificate renewal
 docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
+
+# View real-time access logs
+docker compose exec caddy tail -f /var/log/caddy/site.log
+
+# Test configuration locally
+docker compose exec caddy caddy run --config /etc/caddy/Caddyfile --dry-run
+
+# Export certificate for external use
+docker compose exec caddy cat /data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/wildcard_.example.com/wildcard_.example.com.crt
 ```
+
+## Best Practices
+
+- 🔧 **Environment Variables**: Never commit real tokens to git
+- 🔄 **Updates**: Regularly update Caddy version in Dockerfile  
+- 📊 **Monitoring**: Set up log monitoring for certificate renewals
+- 🔒 **Security**: Use least-privilege API tokens
+- 💾 **Backups**: Backup `caddy_data` directory for certificates
+- 🌐 **DNS**: Set low TTL on DNS records during initial setup
 
 ## License
 
