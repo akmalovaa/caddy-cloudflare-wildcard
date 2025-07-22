@@ -1,0 +1,30 @@
+*.{env.MAIN_DOMAIN} {
+        tls {
+                dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+                resolvers 1.1.1.1 1.0.0.1
+        }
+
+        log {
+                output file /var/log/caddy/site.log {
+                        roll_size 10MiB
+                        roll_keep 3
+                        roll_keep_for 7d
+                        roll_uncompressed
+                }
+        }
+
+        @foo host test.{env.MAIN_DOMAIN}
+        handle @foo {
+                respond "Foo! Wildcard works!" 200
+        }
+
+        @bar host whoami.{env.MAIN_DOMAIN}
+        handle @bar {
+                reverse_proxy whoami:80
+        }
+
+        # Fallback for otherwise unhandled domains
+        handle {
+                abort
+        }
+}

@@ -1,0 +1,21 @@
+services:
+  caddy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: on-failure
+    env_file: ./caddy.env
+    ports:
+      - 80:80
+      - 443:443
+      - 443:443/udp
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy_data:/data
+      - ./caddy_config:/config
+  
+  # whoami image only for testing
+  # you can remove this service if you don't need it
+  whoami:
+    image: traefik/whoami
+    restart: on-failure
