@@ -12,7 +12,6 @@ Therefore, the `Dockerfile` rebuilds the Caddy image with this plugin included.
 - ✅ Ready-to-use proxy examples
 - ✅ HTTP/3 support (QUIC)
 - ✅ Automatic log rotation
-- ✅ Built-in security headers
 
 ## Requirements
 
