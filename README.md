@@ -106,32 +106,6 @@ caddy-1  | {"level":"info","msg":"authorization finalized","identifier":"*.examp
 
 ## Configuration
 
-### Adding new services
-
-1. **Add service to Docker Compose** (`compose.yaml`):
-```yaml
-services:
-  # ...existing services...
-  
-  myapp:
-    image: nginx:alpine
-    restart: on-failure
-    # expose: [80]  # internal port only
-```
-
-2. **Add route to Caddyfile**:
-```caddyfile
-@myapp host myapp.{env.MAIN_DOMAIN}
-handle @myapp {
-    reverse_proxy myapp:80
-    # Optional: add custom headers
-    header {
-        X-Frame-Options DENY
-        X-Content-Type-Options nosniff
-    }
-}
-```
-
 ### Logging
 
 Caddy logs are configured with automatic rotation:
