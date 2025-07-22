@@ -1,6 +1,6 @@
 # Caddy Cloudflare Wildcard
 
-🚀 Simple reverse proxy server based on Caddy with wildcard SSL certificates support from Cloudflare for Homelab
+🚀 Example simple reverse proxy server based on Caddy with wildcard SSL certificates support from Cloudflare for Homelab
 
 To work with Cloudflare, you need to install the `caddy-dns/cloudflare` plugin.
 Therefore, the `Dockerfile` rebuilds the Caddy image with this plugin included.
