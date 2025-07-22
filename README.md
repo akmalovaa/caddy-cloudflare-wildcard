@@ -62,7 +62,7 @@ handle @myapp {
 ### 4. Launch
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ### 5. Verify operation
@@ -71,10 +71,10 @@ After launch, verify the operation:
 
 ```bash
 # Check container status
-docker-compose ps
+docker compose ps
 
 # View logs
-docker-compose logs caddy
+docker compose logs caddy
 ```
 
 example successful log output:
@@ -120,7 +120,7 @@ curl -X GET "https://api.cloudflare.com/client/v4/user/tokens/verify" \
 
 2. **Check Caddy logs:**
 ```bash
-docker-compose logs caddy | grep -i error
+docker compose logs caddy | grep -i error
 ```
 
 3. **Make sure domain is managed through Cloudflare**
@@ -137,16 +137,16 @@ docker-compose logs caddy | grep -i error
 
 ```bash
 # Reload configuration without restart
-docker-compose exec caddy caddy reload --config /etc/caddy/Caddyfile
+docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
 
 # Validate configuration
-docker-compose exec caddy caddy validate --config /etc/caddy/Caddyfile
+docker compose exec caddy caddy validate --config /etc/caddy/Caddyfile
 
 # View active certificates
-docker-compose exec caddy caddy list-certificates
+docker compose exec caddy caddy list-certificates
 
 # Force certificate renewal
-docker-compose exec caddy caddy reload --config /etc/caddy/Caddyfile
+docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
 ```
 
 ## License
