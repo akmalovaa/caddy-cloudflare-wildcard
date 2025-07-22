@@ -104,8 +104,6 @@ caddy-1  | {"level":"info","msg":"authorization finalized","identifier":"*.examp
 └── caddy_config/      # Caddy config cache - created automatically
 ```
 
-## Configuration
-
 ### Logging
 
 Caddy logs are configured with automatic rotation:
